@@ -1,25 +1,47 @@
 package com.serli.oracle.of.bacon.repository;
 
 
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
-import org.neo4j.driver.v1.Session;
+import org.neo4j.driver.v1.*;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.github.sommeri.less4j.core.parser.LessParser.variabledeclaration_return;
+import org.neo4j.driver.v1.types.Node;
+import org.neo4j.driver.v1.types.Path;
 
 public class Neo4JRepository {
     private final Driver driver;
 
     public Neo4JRepository() {
-        this.driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "password"));
+        this.driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "dede"));
     }
 
     public List<?> getConnectionsToKevinBacon(String actorName) {
-        Session session = driver.session();
 
-        // TODO implement Oracle of Bacon
-        return null;
+        String req = "MATCH p=shortestPath((bacon:Actor {name:\"Bacon, Kevin (I)\"})-[*]-(actor:Actor {name:\"" + actorName + "\"})) RETURN DISTINCT p";
+
+        /*
+        StringBuilder sb = new StringBuilder();
+        sb.append("MATCH ({name:\"");
+        sb.append(actorName);
+        sb.append("\"})-[:PLAYED_IN]->(films)<-[:PLAYED_IN]-(actors) WHERE NOT actors.name=\"");
+        sb.append(actorName);
+        sb.append("\" RETURN DISTINCT actors.name");
+        */
+
+        ArrayList<Object> results = new ArrayList<Object>(){};
+        
+        try ( Session session = driver.session() )
+        {
+            StatementResult rs = session.run(req);
+
+            Path path = rs.next().values().get(0).asPath();
+            results.add(path.nodes());
+            results.add(path.relationships());
+
+            return results;
+        }
     }
 
     public static abstract class GraphItem {
