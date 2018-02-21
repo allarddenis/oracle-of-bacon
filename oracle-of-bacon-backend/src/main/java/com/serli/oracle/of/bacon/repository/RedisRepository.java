@@ -13,7 +13,10 @@ public class RedisRepository {
     }
 
     public List<String> getLastTenSearches() {
-        return jedis.lrange(LAST_SEARCHES_KEY, 0, 10);
+        if(jedis.isConnected())
+            return jedis.lrange(LAST_SEARCHES_KEY, 0, 10);
+        else
+            return null;
     }
 
     public void setLastSearch(String actorName) {
